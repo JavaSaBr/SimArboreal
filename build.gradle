@@ -1,7 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'maven'
 
-version='1.0.1-SNAPSHOT'
+version='1.0.1'
 group='com.simsilica'
 
 repositories {
@@ -46,11 +46,23 @@ task assetsJar(type: Jar) {
     exclude '**/*.psd' 
     exclude '**/.backups' 
 }
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.1'
+}
  
 artifacts {
     archives sourcesJar
     archives javadocJar
     archives assetsJar
+}
+
+// To specify a license in the pom:
+install {
+    repositories.mavenInstaller {
+        pom.version = version
+        pom.artifactId = 'sim-arboreal'
+    }
 }
 
 
