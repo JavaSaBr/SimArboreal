@@ -38,7 +38,6 @@ package com.simsilica.arboreal;
 
 import com.jme3.export.*;
 import com.jme3.util.clone.Cloner;
-import com.jme3.util.clone.JmeCloneable;
 import com.simsilica.arboreal.LevelOfDetailParameters.ReductionType;
 import org.jetbrains.annotations.NotNull;
 
@@ -54,21 +53,15 @@ import java.util.*;
  *
  * @author Paul Speed
  */
-public class TreeParameters implements Iterable<BranchParameters>, Savable, JmeCloneable {
+public class TreeParameters extends Parameters implements Iterable<BranchParameters> {
 
     private static final int VERSION = 1;
 
     @NotNull
-    private static final String VERSION_KEY = "formatVersion";
+    private static final BranchParameters[] EMPTY_BRANCHES = new BranchParameters[0];
 
     @NotNull
-    private static final String BRANCHES_KEY = "branches";
-
-    @NotNull
-    private static final String ROOTS_KEY = "roots";
-
-    @NotNull
-    private static final String LODS_KEY = "lodLevels";
+    private static final LevelOfDetailParameters[] EMPTY_LODS = new LevelOfDetailParameters[0];
 
     private static final int DEFAULT_BASE_SCALE = 1;
     private static final int DEFAULT_U_REPEAT = 4;
@@ -85,8 +78,6 @@ public class TreeParameters implements Iterable<BranchParameters>, Savable, JmeC
     private static final float DEFAULT_V_SCALE = 0.45f;
 
     private static final boolean DEFAULT_GENERATE_LEAVES = false;
-    public static final BranchParameters[] EMPTY_BRANCHES = new BranchParameters[0];
-    public static final LevelOfDetailParameters[] EMPTY_LODS = new LevelOfDetailParameters[0];
 
     @NotNull
     private BranchParameters[] branches;
@@ -669,16 +660,8 @@ public class TreeParameters implements Iterable<BranchParameters>, Savable, JmeC
     }
 
     @Override
-    public @NotNull Object jmeClone() {
-        try {
-            return super.clone();
-        } catch (final CloneNotSupportedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
     public void cloneFields(@NotNull final Cloner cloner, @NotNull final Object original) {
+        super.cloneFields(cloner, original);
         this.branches = cloner.clone(branches);
         this.roots = cloner.clone(roots);
         this.lodLevels = cloner.clone(lodLevels);
@@ -686,6 +669,8 @@ public class TreeParameters implements Iterable<BranchParameters>, Savable, JmeC
 
     @Override
     public void write(@NotNull final JmeExporter ex) throws IOException {
+        super.write(ex);
+
         final OutputCapsule out = ex.getCapsule(this);
         out.write(branches, "branches", EMPTY_BRANCHES);
         out.write(roots, "roots", EMPTY_BRANCHES);
@@ -706,6 +691,8 @@ public class TreeParameters implements Iterable<BranchParameters>, Savable, JmeC
 
     @Override
     public void read(@NotNull final JmeImporter im) throws IOException {
+        super.read(im);
+
         final InputCapsule in = im.getCapsule(this);
 
         Savable[] array = in.readSavableArray("branches", EMPTY_BRANCHES);

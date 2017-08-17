@@ -36,15 +36,13 @@
 
 package com.simsilica.arboreal;
 
-import com.jme3.export.*;
-import com.jme3.util.clone.Cloner;
-import com.jme3.util.clone.JmeCloneable;
+import com.jme3.export.InputCapsule;
+import com.jme3.export.JmeExporter;
+import com.jme3.export.JmeImporter;
+import com.jme3.export.OutputCapsule;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.util.Map;
-import java.util.TreeMap;
 
 
 /**
@@ -53,9 +51,8 @@ import java.util.TreeMap;
  *
  * @author Paul Speed
  */
-public class LevelOfDetailParameters implements Savable, JmeCloneable {
+public class LevelOfDetailParameters extends Parameters {
 
-    private static final String VERSION_KEY = "formatVersion";
     private static final int VERSION = 1;
 
     @NotNull
@@ -152,64 +149,6 @@ public class LevelOfDetailParameters implements Savable, JmeCloneable {
     }
 
     /**
-     * From map.
-     *
-     * @param map the map
-     */
-    public void fromMap(@NotNull final Map<String, Object> map) {
-        Number version = (Number) map.get(VERSION_KEY);
-
-        Class type = getClass();
-        for (Map.Entry<String, Object> e : map.entrySet()) {
-            if (VERSION_KEY.equals(e.getKey())) {
-                continue;
-            }
-            try {
-                Field f = type.getField(e.getKey());
-                if (f.getType() == Boolean.TYPE) {
-                    f.set(this, e.getValue());
-                } else if (f.getType() == Integer.TYPE) {
-                    Number val = (Number) e.getValue();
-                    f.set(this, val.intValue());
-                } else if (f.getType() == Float.TYPE) {
-                    Number val = (Number) e.getValue();
-                    f.set(this, val.floatValue());
-                } else if (f.getType() == ReductionType.class) {
-                    f.set(this, Enum.valueOf(ReductionType.class, (String) e.getValue()));
-                } else {
-                    throw new RuntimeException("Unhandled type:" + f.getType());
-                }
-            } catch (Exception ex) {
-                throw new RuntimeException("Error processing:" + e, ex);
-            }
-        }
-    }
-
-    /**
-     * To map map.
-     *
-     * @return the map
-     */
-    public @NotNull Map<String, Object> toMap() {
-
-        Map<String, Object> result = new TreeMap<String, Object>();
-        result.put(VERSION_KEY, VERSION);
-        // Easy for this one
-        for (Field f : getClass().getFields()) {
-            try {
-                if (f.getType() == ReductionType.class) {
-                    result.put(f.getName(), ((ReductionType) f.get(this)).name());
-                } else {
-                    result.put(f.getName(), f.get(this));
-                }
-            } catch (Exception e) {
-                throw new RuntimeException("Error getting field:" + f, e);
-            }
-        }
-        return result;
-    }
-
-    /**
      * Gets distance.
      *
      * @return the distance
@@ -300,20 +239,9 @@ public class LevelOfDetailParameters implements Savable, JmeCloneable {
     }
 
     @Override
-    public @NotNull Object jmeClone() {
-        try {
-            return super.clone();
-        } catch (final CloneNotSupportedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void cloneFields(@NotNull final Cloner cloner, @NotNull final Object original) {
-    }
-
-    @Override
     public void write(@NotNull final JmeExporter ex) throws IOException {
+        super.write(ex);
+
         final OutputCapsule out = ex.getCapsule(this);
         out.write(distance, "distance", DEFAULT_DISTANCE);
         out.write(reduction, "reduction", DEFAULT_REDUCTION_TYPE);
@@ -324,6 +252,8 @@ public class LevelOfDetailParameters implements Savable, JmeCloneable {
 
     @Override
     public void read(@NotNull final JmeImporter im) throws IOException {
+        super.read(im);
+
         final InputCapsule in = im.getCapsule(this);
         distance = in.readFloat("distance", DEFAULT_DISTANCE);
         reduction = in.readEnum("reduction", ReductionType.class, DEFAULT_REDUCTION_TYPE);

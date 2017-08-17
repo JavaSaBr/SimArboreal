@@ -34,27 +34,22 @@
 
 package com.simsilica.arboreal;
 
-import com.jme3.export.*;
-import com.jme3.util.clone.Cloner;
-import com.jme3.util.clone.JmeCloneable;
+import com.jme3.export.InputCapsule;
+import com.jme3.export.JmeExporter;
+import com.jme3.export.JmeImporter;
+import com.jme3.export.OutputCapsule;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * The settings of branch.
  *
  * @author Paul Speed
  */
-public class BranchParameters implements Savable, JmeCloneable {
+public class BranchParameters extends Parameters {
 
-    @NotNull
-    private static final String VERSION_KEY = "formatVersion";
-
-    private static final int VERSION = 1;
+    public static final int VERSION = 1;
 
     private static final float DEFAULT_RADIUS_SCALE = 1f;
     private static final float DEFAULT_LENGTH_SCALE = 0.6f;
@@ -181,58 +176,6 @@ public class BranchParameters implements Savable, JmeCloneable {
      */
     public boolean isEnabled() {
         return enabled;
-    }
-
-    /**
-     * From map.
-     *
-     * @param map the map
-     */
-    public void fromMap(@NotNull final Map<String, Object> map) {
-        Number version = (Number) map.get(VERSION_KEY);
-
-        Class type = getClass();
-        for (Map.Entry<String, Object> e : map.entrySet()) {
-            if (VERSION_KEY.equals(e.getKey())) {
-                continue;
-            }
-            try {
-                Field f = type.getField(e.getKey());
-                if (f.getType() == Boolean.TYPE) {
-                    f.set(this, e.getValue());
-                } else if (f.getType() == Integer.TYPE) {
-                    Number val = (Number) e.getValue();
-                    f.set(this, val.intValue());
-                } else if (f.getType() == Float.TYPE) {
-                    Number val = (Number) e.getValue();
-                    f.set(this, val.floatValue());
-                } else {
-                    throw new RuntimeException("Unhandled type:" + f.getType());
-                }
-            } catch (Exception ex) {
-                throw new RuntimeException("Error processing:" + e, ex);
-            }
-        }
-    }
-
-    /**
-     * To map map.
-     *
-     * @return the map
-     */
-    public @NotNull Map<String, Object> toMap() {
-
-        Map<String, Object> result = new TreeMap<String, Object>();
-        result.put(VERSION_KEY, VERSION);
-        // Easy for this one
-        for (Field f : getClass().getFields()) {
-            try {
-                result.put(f.getName(), f.get(this));
-            } catch (Exception e) {
-                throw new RuntimeException("Error getting field:" + f, e);
-            }
-        }
-        return result;
     }
 
     /**
@@ -488,20 +431,9 @@ public class BranchParameters implements Savable, JmeCloneable {
     }
 
     @Override
-    public @NotNull Object jmeClone() {
-        try {
-            return super.clone();
-        } catch (final CloneNotSupportedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void cloneFields(@NotNull final Cloner cloner, @NotNull final Object original) {
-    }
-
-    @Override
     public void write(@NotNull final JmeExporter ex) throws IOException {
+        super.write(ex);
+
         final OutputCapsule out = ex.getCapsule(this);
         out.write(enabled, "enabled", false);
         out.write(inherit, "inherit", DEFAULT_INHERIT);
@@ -522,6 +454,8 @@ public class BranchParameters implements Savable, JmeCloneable {
 
     @Override
     public void read(@NotNull final JmeImporter im) throws IOException {
+        super.read(im);
+
         final InputCapsule in = im.getCapsule(this);
         enabled = in.readBoolean("enabled", false);
         inherit = in.readBoolean("inherit", DEFAULT_INHERIT);
