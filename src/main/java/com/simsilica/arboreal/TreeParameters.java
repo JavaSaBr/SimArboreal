@@ -204,10 +204,10 @@ public class TreeParameters implements Iterable<BranchParameters>, Savable, JmeC
     /**
      * Sets generate leaves.
      *
-     * @param b the b
+     * @param generateLeaves the generateLeaves
      */
-    public void setGenerateLeaves(boolean b) {
-        this.generateLeaves = b;
+    public void setGenerateLeaves(final boolean generateLeaves) {
+        this.generateLeaves = generateLeaves;
     }
 
     /**
@@ -222,10 +222,10 @@ public class TreeParameters implements Iterable<BranchParameters>, Savable, JmeC
     /**
      * Sets base scale.
      *
-     * @param f the f
+     * @param baseScale the baseScale
      */
-    public void setBaseScale(float f) {
-        this.baseScale = f;
+    public void setBaseScale(final float baseScale) {
+        this.baseScale = baseScale;
     }
 
     /**
@@ -240,10 +240,10 @@ public class TreeParameters implements Iterable<BranchParameters>, Savable, JmeC
     /**
      * Sets trunk radius.
      *
-     * @param f the f
+     * @param trunkRadius the trunkRadius
      */
-    public void setTrunkRadius(float f) {
-        this.trunkRadius = f;
+    public void setTrunkRadius(final float trunkRadius) {
+        this.trunkRadius = trunkRadius;
     }
 
     /**
@@ -258,10 +258,10 @@ public class TreeParameters implements Iterable<BranchParameters>, Savable, JmeC
     /**
      * Sets trunk height.
      *
-     * @param f the f
+     * @param trunkHeight the trunkHeight
      */
-    public void setTrunkHeight(float f) {
-        this.trunkHeight = f;
+    public void setTrunkHeight(final float trunkHeight) {
+        this.trunkHeight = trunkHeight;
     }
 
     /**
@@ -276,10 +276,10 @@ public class TreeParameters implements Iterable<BranchParameters>, Savable, JmeC
     /**
      * Sets root height.
      *
-     * @param f the f
+     * @param rootHeight the rootHeight
      */
-    public void setRootHeight(float f) {
-        this.rootHeight = f;
+    public void setRootHeight(final float rootHeight) {
+        this.rootHeight = rootHeight;
     }
 
     /**
@@ -294,10 +294,10 @@ public class TreeParameters implements Iterable<BranchParameters>, Savable, JmeC
     /**
      * Sets y offset.
      *
-     * @param f the f
+     * @param yOffset the yOffset
      */
-    public void setYOffset(float f) {
-        this.yOffset = f;
+    public void setYOffset(final float yOffset) {
+        this.yOffset = yOffset;
     }
 
     /**
@@ -312,10 +312,10 @@ public class TreeParameters implements Iterable<BranchParameters>, Savable, JmeC
     /**
      * Sets leaf scale.
      *
-     * @param f the f
+     * @param leafScale the leafScale
      */
-    public void setLeafScale(float f) {
-        this.leafScale = f;
+    public void setLeafScale(final float leafScale) {
+        this.leafScale = leafScale;
     }
 
     /**
@@ -328,12 +328,12 @@ public class TreeParameters implements Iterable<BranchParameters>, Savable, JmeC
     }
 
     /**
-     * Sets texture u repeat.
+     * Sets texture u uRepeat.
      *
-     * @param repeat the repeat
+     * @param uRepeat the uRepeat
      */
-    public void setTextureURepeat(int repeat) {
-        this.uRepeat = repeat;
+    public void setTextureURepeat(final int uRepeat) {
+        this.uRepeat = uRepeat;
     }
 
     /**
@@ -348,10 +348,10 @@ public class TreeParameters implements Iterable<BranchParameters>, Savable, JmeC
     /**
      * Sets texture v scale.
      *
-     * @param f the f
+     * @param vScale the vScale
      */
-    public void setTextureVScale(float f) {
-        this.vScale = f;
+    public void setTextureVScale(final float vScale) {
+        this.vScale = vScale;
     }
 
     /**
@@ -366,10 +366,10 @@ public class TreeParameters implements Iterable<BranchParameters>, Savable, JmeC
     /**
      * Sets flex height.
      *
-     * @param f the f
+     * @param flexHeight the flexHeight
      */
-    public void setFlexHeight(float f) {
-        this.flexHeight = f;
+    public void setFlexHeight(final float flexHeight) {
+        this.flexHeight = flexHeight;
     }
 
     /**
@@ -384,10 +384,10 @@ public class TreeParameters implements Iterable<BranchParameters>, Savable, JmeC
     /**
      * Sets trunk flexibility.
      *
-     * @param f the f
+     * @param trunkFlexibility the trunkFlexibility
      */
-    public void setTrunkFlexibility(float f) {
-        this.trunkFlexibility = f;
+    public void setTrunkFlexibility(final float trunkFlexibility) {
+        this.trunkFlexibility = trunkFlexibility;
     }
 
     /**
@@ -402,10 +402,10 @@ public class TreeParameters implements Iterable<BranchParameters>, Savable, JmeC
     /**
      * Sets branch flexibility.
      *
-     * @param f the f
+     * @param branchFlexibility the branchFlexibility
      */
-    public void setBranchFlexibility(float f) {
-        this.branchFlexibility = f;
+    public void setBranchFlexibility(final float branchFlexibility) {
+        this.branchFlexibility = branchFlexibility;
     }
 
     /**
@@ -442,10 +442,13 @@ public class TreeParameters implements Iterable<BranchParameters>, Savable, JmeC
      * @return the effective branches
      */
     public List<BranchParameters> getEffectiveBranches() {
-        List<BranchParameters> list = new ArrayList<>();
-        for (BranchParameters p : this) {
-            list.add(p);
+
+        final List<BranchParameters> list = new ArrayList<>();
+
+        for (final BranchParameters branchParameters : this) {
+            list.add(branchParameters);
         }
+
         return list;
     }
 
@@ -470,11 +473,14 @@ public class TreeParameters implements Iterable<BranchParameters>, Savable, JmeC
      * @return the effective roots
      */
     public List<BranchParameters> getEffectiveRoots() {
-        List<BranchParameters> list = new ArrayList<BranchParameters>();
-        for (Iterator<BranchParameters> it = rootIterator(); it.hasNext(); ) {
-            BranchParameters p = it.next();
-            list.add(p);
+
+        final List<BranchParameters> list = new ArrayList<>();
+        final Iterator<BranchParameters> it = rootIterator();
+
+        while (it.hasNext()) {
+            list.add(it.next());
         }
+
         return list;
     }
 
@@ -499,11 +505,11 @@ public class TreeParameters implements Iterable<BranchParameters>, Savable, JmeC
     /**
      * Gets lod.
      *
-     * @param i the
+     * @param level the level
      * @return the lod
      */
-    public LevelOfDetailParameters getLod(int i) {
-        return lodLevels[i];
+    public LevelOfDetailParameters getLod(int level) {
+        return lodLevels[level];
     }
 
     /**
