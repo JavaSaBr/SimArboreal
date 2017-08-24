@@ -23,7 +23,6 @@ public class TreeParametersTest {
         final TreeParameters test = new TreeParameters();
         test.setBaseScale(2.3F);
 
-
         final BinaryExporter exporter = BinaryExporter.getInstance();
         try {
             exporter.save(test, bout);
@@ -39,6 +38,6 @@ public class TreeParametersTest {
             throw new RuntimeException(e);
         }
 
-        Assertions.assertEquals(2.3F, test.getBaseScale());
+        Assertions.assertEquals(2.3F, loaded.getBaseScale());
     }
 }

@@ -79,12 +79,21 @@ public class TreeParameters extends Parameters implements Iterable<BranchParamet
 
     private static final boolean DEFAULT_GENERATE_LEAVES = false;
 
+    /**
+     * The list of branches.
+     */
     @NotNull
     private BranchParameters[] branches;
 
+    /**
+     * The list of roots.
+     */
     @NotNull
     private BranchParameters[] roots;
 
+    /**
+     * The list of level of details.
+     */
     @NotNull
     private LevelOfDetailParameters[] lodLevels;
 
@@ -415,6 +424,27 @@ public class TreeParameters extends Parameters implements Iterable<BranchParamet
      */
     public int getDepth() {
         return branches.length;
+    }
+
+    /**
+     * @return the list of branches.
+     */
+    public @NotNull BranchParameters[] getBranches() {
+        return branches;
+    }
+
+    /**
+     * @return the list of roots.
+     */
+    public @NotNull BranchParameters[] getRoots() {
+        return roots;
+    }
+
+    /**
+     * @return the list of level of details.
+     */
+    public @NotNull LevelOfDetailParameters[] getLodLevels() {
+        return lodLevels;
     }
 
     /**
