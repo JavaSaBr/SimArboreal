@@ -418,12 +418,21 @@ public class TreeParameters extends Parameters implements Iterable<BranchParamet
     }
 
     /**
-     * Gets depth.
+     * Gets branches depth.
      *
-     * @return the depth
+     * @return the branches depth
      */
-    public int getDepth() {
+    public int getBranchesDepth() {
         return branches.length;
+    }
+
+    /**
+     * Gets roots depth.
+     *
+     * @return the roots depth
+     */
+    public int getRootsDepth() {
+        return roots.length;
     }
 
     /**
@@ -434,6 +443,54 @@ public class TreeParameters extends Parameters implements Iterable<BranchParamet
     }
 
     /**
+     * Remove the branch from this tree.
+     *
+     * @param parameters the branch.
+     * @return the index of the branch.
+     */
+    public int removeBranch(@NotNull final BranchParameters parameters) {
+
+        final BranchParameters[] newBranches = new BranchParameters[branches.length - 1];
+
+        int index = -1;
+
+        for (int i = 0, g = 0; i < branches.length; i++) {
+            if (branches[i] == parameters) {
+                index = i;
+                continue;
+            }
+
+            newBranches[g++] = branches[i];
+        }
+
+        this.branches = newBranches;
+
+        return index;
+    }
+
+    /**
+     * Add the new branch by the index.
+     *
+     * @param parameters the branch.
+     * @param index      the index.
+     */
+    public void addBranch(@NotNull final BranchParameters parameters, final int index) {
+
+        final BranchParameters[] newBranches = new BranchParameters[branches.length + 1];
+
+        for (int i = 0, g = 0; i < branches.length; i++) {
+
+            if (i == index) {
+                newBranches[g++] = parameters;
+            }
+
+            newBranches[g++] = branches[i];
+        }
+
+        this.branches = newBranches;
+    }
+
+    /**
      * @return the list of roots.
      */
     public @NotNull BranchParameters[] getRoots() {
@@ -441,10 +498,106 @@ public class TreeParameters extends Parameters implements Iterable<BranchParamet
     }
 
     /**
+     * Remove the root from this tree.
+     *
+     * @param parameters the root.
+     * @return the index of the root.
+     */
+    public int removeRoot(@NotNull final BranchParameters parameters) {
+
+        final BranchParameters[] newRoots = new BranchParameters[roots.length - 1];
+
+        int index = -1;
+
+        for (int i = 0, g = 0; i < roots.length; i++) {
+            if (roots[i] == parameters) {
+                index = i;
+                continue;
+            }
+
+            newRoots[g++] = roots[i];
+        }
+
+        this.roots = newRoots;
+
+        return index;
+    }
+
+    /**
+     * Add the new root by the index.
+     *
+     * @param parameters the root.
+     * @param index      the index.
+     */
+    public void addRoot(@NotNull final BranchParameters parameters, final int index) {
+
+        final BranchParameters[] newRoots = new BranchParameters[roots.length + 1];
+
+        for (int i = 0, g = 0; i < roots.length; i++) {
+
+            if (i == index) {
+                newRoots[g++] = parameters;
+            }
+
+            newRoots[g++] = roots[i];
+        }
+
+        this.roots = newRoots;
+    }
+
+    /**
      * @return the list of level of details.
      */
     public @NotNull LevelOfDetailParameters[] getLodLevels() {
         return lodLevels;
+    }
+
+    /**
+     * Remove the lod from this tree.
+     *
+     * @param parameters the lod.
+     * @return the index of the lod.
+     */
+    public int removeLodLevel(@NotNull final LevelOfDetailParameters parameters) {
+
+        final LevelOfDetailParameters[] newLods = new LevelOfDetailParameters[lodLevels.length - 1];
+
+        int index = -1;
+
+        for (int i = 0, g = 0; i < lodLevels.length; i++) {
+            if (lodLevels[i] == parameters) {
+                index = i;
+                continue;
+            }
+
+            newLods[g++] = lodLevels[i];
+        }
+
+        this.lodLevels = newLods;
+
+        return index;
+    }
+
+    /**
+     * Add the new root by the index.
+     *
+     * @param parameters the root.
+     * @param index      the index.
+     */
+    public void addLod(@NotNull final LevelOfDetailParameters parameters, final int index) {
+
+        final LevelOfDetailParameters[] newLods = new LevelOfDetailParameters[lodLevels.length + 1];
+
+        for (int i = 0, g = 0; i < lodLevels.length; i++) {
+
+            if (i == index) {
+                newLods[g++] = parameters;
+            }
+
+            newLods[g++] = lodLevels[i];
+        }
+
+        this.lodLevels = newLods;
     }
 
     /**
@@ -765,7 +918,7 @@ public class TreeParameters extends Parameters implements Iterable<BranchParamet
 
         @Override
         public boolean hasNext() {
-            return next < getDepth() && getBranch(next).enabled;
+            return next < getBranchesDepth() && getBranch(next).enabled;
         }
 
         @Override
@@ -802,7 +955,7 @@ public class TreeParameters extends Parameters implements Iterable<BranchParamet
 
         @Override
         public boolean hasNext() {
-            return next < getDepth() && getRoot(next).enabled;
+            return next < getRootsDepth() && getRoot(next).enabled;
         }
 
         @Override
