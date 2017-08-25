@@ -487,6 +487,10 @@ public class TreeParameters extends Parameters implements Iterable<BranchParamet
             newBranches[g++] = branches[i];
         }
 
+        if (index == -1) {
+            newBranches[branches.length] = parameters;
+        }
+
         this.branches = newBranches;
     }
 
@@ -542,6 +546,10 @@ public class TreeParameters extends Parameters implements Iterable<BranchParamet
             newRoots[g++] = roots[i];
         }
 
+        if (index == -1) {
+            newRoots[roots.length] = parameters;
+        }
+
         this.roots = newRoots;
     }
 
@@ -595,6 +603,10 @@ public class TreeParameters extends Parameters implements Iterable<BranchParamet
             }
 
             newLods[g++] = lodLevels[i];
+        }
+
+        if (index == -1) {
+            newLods[lodLevels.length] = parameters;
         }
 
         this.lodLevels = newLods;
