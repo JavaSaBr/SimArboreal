@@ -1,8 +1,32 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0-RC2'
+    }
+}
+
 apply plugin: 'java'
 apply plugin: 'maven'
+apply plugin: 'idea'
+apply plugin: 'org.junit.platform.gradle.plugin'
 
-version='1.0.1-SNAPSHOT'
+version='1.1.0'
 group='com.simsilica'
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+compileTestJava {
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+    options.compilerArgs += '-parameters'
+}
+
+ext.junitPlatformVersion = "1.0.0-M5"
+ext.junitJupiterVersion = "5.0.0-M5"
+ext.log4jVersion = '2.6.2'
 
 repositories {
     mavenLocal()
@@ -20,11 +44,26 @@ configurations.compile {
 // In this section you declare the dependencies for your production and test code
 dependencies {
 
+    // https://mvnrepository.com/artifact/org.jetbrains/annotations
+    compile group: 'org.jetbrains', name: 'annotations', version: '15.0'
+
     compile "org.jmonkeyengine:jme3-core:3.1.+" 
     //compile "com.jme3:jme3-core:unknown" 
     compile 'org.slf4j:slf4j-api:1.7.13'
 
-    runtime files("assets")        
+    runtime files("assets")
+
+    testCompile "org.junit.platform:junit-platform-commons:$junitPlatformVersion"
+    testRuntime "org.junit.platform:junit-platform-engine:$junitPlatformVersion"
+
+    testCompile "org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion"
+    testRuntime "org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion"
+
+    testRuntime "org.apache.logging.log4j:log4j-core:$log4jVersion"
+    testRuntime "org.apache.logging.log4j:log4j-jul:$log4jVersion"
+
+    // Only needed to run tests in an (IntelliJ) IDE(A) that bundles an older version
+    testCompile "org.junit.platform:junit-platform-launcher:$junitPlatformVersion"
 }
 
 
@@ -46,11 +85,23 @@ task assetsJar(type: Jar) {
     exclude '**/*.psd' 
     exclude '**/.backups' 
 }
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.1'
+}
  
 artifacts {
     archives sourcesJar
     archives javadocJar
     archives assetsJar
+}
+
+// To specify a license in the pom:
+install {
+    repositories.mavenInstaller {
+        pom.version = version
+        pom.artifactId = 'sim-arboreal'
+    }
 }
 
 
