@@ -592,7 +592,7 @@ public class TreeParameters extends Parameters implements Iterable<BranchParamet
      * @param parameters the root.
      * @param index      the index.
      */
-    public void addLod(@NotNull final LevelOfDetailParameters parameters, final int index) {
+    public void addLodLevel(@NotNull final LevelOfDetailParameters parameters, final int index) {
 
         final LevelOfDetailParameters[] newLods = new LevelOfDetailParameters[lodLevels.length + 1];
 
