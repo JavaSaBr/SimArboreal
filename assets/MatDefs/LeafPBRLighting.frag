@@ -1,161 +1,113 @@
+#import "Common/ShaderLib/GLSLCompat.glsllib"
+#import "Common/ShaderLib/PBR.glsllib"
 #import "Common/ShaderLib/Parallax.glsllib"
-#import "Common/ShaderLib/Optics.glsllib"
-#define ATTENUATION
-//#define HQ_ATTENUATION
+#import "Common/ShaderLib/Lighting.glsllib"
 
-#import "MatDefs/FragScattering.glsllib"
 
 varying vec2 texCoord;
 #ifdef SEPARATE_TEXCOORD
   varying vec2 texCoord2;
 #endif
 
-varying vec3 AmbientSum;
-varying vec4 DiffuseSum;
-varying vec3 SpecularSum;
+varying vec4 Color;
 
-varying float vDistance;
+uniform vec4 g_LightData[NB_LIGHTS];
 
-#ifndef VERTEX_LIGHTING
-  uniform vec4 g_LightDirection;
-  //varying vec3 vPosition;
-  varying vec3 vViewDir;
-  varying vec4 vLightDir;
-  varying vec3 lightVec;
+uniform vec3 g_CameraPosition;
+
+uniform float m_Roughness;
+uniform float m_Metallic;
+
+varying vec3 wPosition;
+
+
+#ifdef INDIRECT_LIGHTING
+//  uniform sampler2D m_IntegrateBRDF;
+  uniform samplerCube g_PrefEnvMap;
+  uniform samplerCube g_IrradianceMap;
+  uniform vec4 g_LightProbeData;
+#endif
+
+#ifdef BASECOLORMAP
+  uniform sampler2D m_BaseColorMap;
+#endif
+
+#ifdef USE_PACKED_MR
+     uniform sampler2D m_MetallicRoughnessMap;
 #else
-  varying vec2 vertexLightValues;
+    #ifdef METALLICMAP
+      uniform sampler2D m_MetallicMap;
+    #endif
+    #ifdef ROUGHNESSMAP
+      uniform sampler2D m_RoughnessMap;
+    #endif
 #endif
 
-#ifdef DIFFUSEMAP
-  uniform sampler2D m_DiffuseMap;
+#ifdef EMISSIVE
+    uniform vec4 m_Emissive;
+#endif
+#ifdef EMISSIVEMAP
+    uniform sampler2D m_EmissiveMap;
+#endif
+#if defined(EMISSIVE) || defined(EMISSIVEMAP)
+    uniform float m_EmissivePower;
+    uniform float m_EmissiveIntensity;
 #endif
 
-#ifdef SPECULARMAP
-  uniform sampler2D m_SpecularMap;
+#ifdef SPECGLOSSPIPELINE
+
+  uniform vec4 m_Specular;
+  uniform float m_Glossiness;
+  #ifdef USE_PACKED_SG
+    uniform sampler2D m_SpecularGlossinessMap;
+  #else
+    uniform sampler2D m_SpecularMap;
+    uniform sampler2D m_GlossinessMap;
+  #endif
 #endif
 
 #ifdef PARALLAXMAP
-  uniform sampler2D m_ParallaxMap;  
+  uniform sampler2D m_ParallaxMap;
 #endif
-#if (defined(PARALLAXMAP) || (defined(NORMALMAP_PARALLAX) && defined(NORMALMAP))) && !defined(VERTEX_LIGHTING) 
+#if (defined(PARALLAXMAP) || (defined(NORMALMAP_PARALLAX) && defined(NORMALMAP)))
     uniform float m_ParallaxHeight;
 #endif
 
 #ifdef LIGHTMAP
   uniform sampler2D m_LightMap;
 #endif
-  
-#ifdef NORMALMAP
-  uniform sampler2D m_NormalMap;   
-#else
-  varying vec3 vNormal;
-#endif
 
-#ifdef ALPHAMAP
-  uniform sampler2D m_AlphaMap;
+#if defined(NORMALMAP) || defined(PARALLAXMAP)
+  uniform sampler2D m_NormalMap;
+  varying vec4 wTangent;
 #endif
+varying vec3 wNormal;
 
-#ifdef COLORRAMP
-  uniform sampler2D m_ColorRamp;
-#endif
-
+#ifdef DISCARD_ALPHA
 uniform float m_AlphaDiscardThreshold;
-
-#ifndef VERTEX_LIGHTING
-uniform float m_Shininess;
-
-#ifdef HQ_ATTENUATION
-uniform vec4 g_LightPosition;
-#endif
-
-#ifdef USE_REFLECTION 
-    uniform float m_ReflectionPower;
-    uniform float m_ReflectionIntensity;
-    varying vec4 refVec;
-
-    uniform ENVMAP m_EnvMap;
-#endif
-
-float tangDot(in vec3 v1, in vec3 v2){
-    float d = dot(v1,v2);
-    #ifdef V_TANGENT
-        d = 1.0 - d*d;
-        return step(0.0, d) * sqrt(d);
-    #else
-        return d;
-    #endif
-}
-
-float lightComputeDiffuse(in vec3 norm, in vec3 lightdir, in vec3 viewdir){
-    #ifdef MINNAERT
-        float NdotL = max(0.0, dot(norm, lightdir));
-        float NdotV = max(0.0, dot(norm, viewdir));
-        return NdotL * pow(max(NdotL * NdotV, 0.1), -1.0) * 0.5;
-    #else
-        return max(0.0, dot(norm, lightdir));
-    #endif
-}
-
-float lightComputeSpecular(in vec3 norm, in vec3 viewdir, in vec3 lightdir, in float shiny){
-    // NOTE: check for shiny <= 1 removed since shininess is now 
-    // 1.0 by default (uses matdefs default vals)
-    #ifdef LOW_QUALITY
-       // Blinn-Phong
-       // Note: preferably, H should be computed in the vertex shader
-       vec3 H = (viewdir + lightdir) * vec3(0.5);
-       return pow(max(tangDot(H, norm), 0.0), shiny);
-    #elif defined(WARDISO)
-        // Isotropic Ward
-        vec3 halfVec = normalize(viewdir + lightdir);
-        float NdotH  = max(0.001, tangDot(norm, halfVec));
-        float NdotV  = max(0.001, tangDot(norm, viewdir));
-        float NdotL  = max(0.001, tangDot(norm, lightdir));
-        float a      = tan(acos(NdotH));
-        float p      = max(shiny/128.0, 0.001);
-        return NdotL * (1.0 / (4.0*3.14159265*p*p)) * (exp(-(a*a)/(p*p)) / (sqrt(NdotV * NdotL)));
-    #else
-       // Standard Phong
-       vec3 R = reflect(-lightdir, norm);
-       return pow(max(tangDot(R, viewdir), 0.0), shiny);
-    #endif
-}
-
-vec2 computeLighting(in vec3 wvNorm, in vec3 wvViewDir, in vec3 wvLightDir){
-   float diffuseFactor = lightComputeDiffuse(wvNorm, wvLightDir, wvViewDir);
-   float specularFactor = lightComputeSpecular(wvNorm, wvViewDir, wvLightDir, m_Shininess);
-
-   #ifdef HQ_ATTENUATION
-    float att = clamp(1.0 - g_LightPosition.w * length(lightVec), 0.0, 1.0);
-   #else
-    float att = vLightDir.w;
-   #endif
-
-   if (m_Shininess <= 1.0) {
-       specularFactor = 0.0; // should be one instruction on most cards ..
-   }
-
-   specularFactor *= diffuseFactor;
-
-   return vec2(diffuseFactor, specularFactor) * vec2(att);
-}
 #endif
 
 void main(){
     vec2 newTexCoord;
-     
-    #if (defined(PARALLAXMAP) || (defined(NORMALMAP_PARALLAX) && defined(NORMALMAP))) && !defined(VERTEX_LIGHTING) 
-     
+    vec3 viewDir = normalize(g_CameraPosition - wPosition);
+
+    #if defined(NORMALMAP) || defined(PARALLAXMAP)
+        mat3 tbnMat = mat3(wTangent.xyz, wTangent.w * cross( (wNormal), (wTangent.xyz)), wNormal.xyz);
+    #endif
+
+    #if (defined(PARALLAXMAP) || (defined(NORMALMAP_PARALLAX) && defined(NORMALMAP)))
+       vec3 vViewDir =  viewDir * tbnMat;
        #ifdef STEEP_PARALLAX
            #ifdef NORMALMAP_PARALLAX
-               //parallax map is stored in the alpha channel of the normal map         
+               //parallax map is stored in the alpha channel of the normal map
                newTexCoord = steepParallaxOffset(m_NormalMap, vViewDir, texCoord, m_ParallaxHeight);
            #else
                //parallax map is a texture
-               newTexCoord = steepParallaxOffset(m_ParallaxMap, vViewDir, texCoord, m_ParallaxHeight);         
+               newTexCoord = steepParallaxOffset(m_ParallaxMap, vViewDir, texCoord, m_ParallaxHeight);
            #endif
        #else
            #ifdef NORMALMAP_PARALLAX
-               //parallax map is stored in the alpha channel of the normal map         
+               //parallax map is stored in the alpha channel of the normal map
                newTexCoord = classicParallaxOffset(m_NormalMap, vViewDir, texCoord, m_ParallaxHeight);
            #else
                //parallax map is a texture
@@ -163,87 +115,82 @@ void main(){
            #endif
        #endif
     #else
-       newTexCoord = texCoord;    
+       newTexCoord = texCoord;
     #endif
-    
-   #ifdef DIFFUSEMAP
-      vec4 diffuseColor = texture2D(m_DiffuseMap, newTexCoord);
+
+    #ifdef BASECOLORMAP
+        vec4 albedo = texture2D(m_BaseColorMap, newTexCoord) * Color;
     #else
-      vec4 diffuseColor = vec4(1.0);
+        vec4 albedo = Color;
     #endif
 
-    float alpha = DiffuseSum.a * diffuseColor.a;
-    #ifdef ALPHAMAP
-       alpha = alpha * texture2D(m_AlphaMap, newTexCoord).r;
-    #endif
-
-    // Do some distance based darkening of the color under alpha 
-/*    float distanceFalloff = 32.0;
-    float mid = distanceFalloff * 0.75;
-    float colorMix = clamp((distanceFalloff - vDistance) / mid, 0.5, 1.0);
-     
-    if(alpha < 0.75) {
-        //diffuseColor = mix(vec4(1.0, 0.0, 0.0, 1.0), diffuseColor, colorMix * alpha);
-        diffuseColor = mix(vec4(0.2, 0.25, 0.05, 1.0), diffuseColor, colorMix);
-    }
-    alpha = alpha * colorMix * 2.0;*/ 
-
-    if(alpha < m_AlphaDiscardThreshold){
-        discard;
-    }
-    
-
-    #ifndef VERTEX_LIGHTING
-        float spotFallOff = 1.0;
-
-        #if __VERSION__ >= 110
-          // allow use of control flow
-          if(g_LightDirection.w != 0.0){
+    #ifdef USE_PACKED_MR
+        vec2 rm = texture2D(m_MetallicRoughnessMap, newTexCoord).gb;
+        float Roughness = rm.x * max(m_Roughness, 1e-8);
+        float Metallic = rm.y * max(m_Metallic, 0.0);
+    #else
+        #ifdef ROUGHNESSMAP
+            float Roughness = texture2D(m_RoughnessMap, newTexCoord).r * max(m_Roughness, 1e-8);
+        #else
+            float Roughness =  max(m_Roughness, 1e-8);
         #endif
+        #ifdef METALLICMAP
+            float Metallic = texture2D(m_MetallicMap, newTexCoord).r * max(m_Metallic, 0.0);
+        #else
+            float Metallic =  max(m_Metallic, 0.0);
+        #endif
+    #endif
 
-          vec3 L       = normalize(lightVec.xyz);
-          vec3 spotdir = normalize(g_LightDirection.xyz);
-          float curAngleCos = dot(-L, spotdir);             
-          float innerAngleCos = floor(g_LightDirection.w) * 0.001;
-          float outerAngleCos = fract(g_LightDirection.w);
-          float innerMinusOuter = innerAngleCos - outerAngleCos;
-          spotFallOff = (curAngleCos - outerAngleCos) / innerMinusOuter;
+    float alpha = albedo.a;
 
-          #if __VERSION__ >= 110
-              if(spotFallOff <= 0.0){
-                  gl_FragColor.rgb = AmbientSum * diffuseColor.rgb;
-                  gl_FragColor.a   = alpha;
-                  return;
-              }else{
-                  spotFallOff = clamp(spotFallOff, 0.0, 1.0);
-              }
-             }
-          #else
-             spotFallOff = clamp(spotFallOff, step(g_LightDirection.w, 0.001), 1.0);
-          #endif
-     #endif
- 
+    #ifdef DISCARD_ALPHA
+        if(alpha < m_AlphaDiscardThreshold){
+            discard;
+        }
+    #endif
+
     // ***********************
     // Read from textures
     // ***********************
-    #if defined(NORMALMAP) && !defined(VERTEX_LIGHTING)
+    #if defined(NORMALMAP)
       vec4 normalHeight = texture2D(m_NormalMap, newTexCoord);
-      vec3 normal = normalize((normalHeight.xyz * vec3(2.0) - vec3(1.0)));
-      #ifdef LATC
-        normal.z = sqrt(1.0 - (normal.x * normal.x) - (normal.y * normal.y));
-      #endif
-      //normal.y = -normal.y;
-    #elif !defined(VERTEX_LIGHTING)
-      vec3 normal = vNormal;
-      #if !defined(LOW_QUALITY) && !defined(V_TANGENT)
-         normal = normalize(normal);
-      #endif
+      //Note the -2.0 and -1.0. We invert the green channel of the normal map,
+      //as it's complient with normal maps generated with blender.
+      //see http://hub.jmonkeyengine.org/forum/topic/parallax-mapping-fundamental-bug/#post-256898
+      //for more explanation.
+      vec3 normal = normalize((normalHeight.xyz * vec3(2.0, NORMAL_TYPE * 2.0, 2.0) - vec3(1.0, NORMAL_TYPE * 1.0, 1.0)));
+      normal = normalize(tbnMat * normal);
+      //normal = normalize(normal * inverse(tbnMat));
+    #else
+      vec3 normal = normalize(wNormal);
     #endif
 
-    #ifdef SPECULARMAP
-      vec4 specularColor = texture2D(m_SpecularMap, newTexCoord);
+    float specular = 0.5;
+    #ifdef SPECGLOSSPIPELINE
+
+        #ifdef USE_PACKED_SG
+            vec4 specularColor = texture2D(m_SpecularGlossinessMap, newTexCoord);
+            float glossiness = specularColor.a * m_Glossiness;
+            specularColor *= m_Specular;
+        #else
+            #ifdef SPECULARMAP
+                vec4 specularColor = texture2D(m_SpecularMap, newTexCoord);
+            #else
+                vec4 specularColor = vec4(1.0);
+            #endif
+            #ifdef GLOSSINESSMAP
+                float glossiness = texture2D(m_GlossinesMap, newTexCoord).r * m_Glossiness;
+            #else
+                float glossiness = m_Glossiness;
+            #endif
+            specularColor *= m_Specular;
+        #endif
+        vec4 diffuseColor = albedo * (1.0 - max(max(specularColor.r, specularColor.g), specularColor.b));
+        Roughness = 1.0 - glossiness;
     #else
-      vec4 specularColor = vec4(1.0);
+        float nonMetalSpec = 0.08 * specular;
+        vec4 specularColor = (nonMetalSpec - nonMetalSpec * Metallic) + albedo * Metallic;
+        vec4 diffuseColor = albedo - albedo * Metallic;
     #endif
 
     #ifdef LIGHTMAP
@@ -254,60 +201,76 @@ void main(){
           lightMapColor = texture2D(m_LightMap, texCoord).rgb;
        #endif
        specularColor.rgb *= lightMapColor;
-       diffuseColor.rgb  *= lightMapColor;
+       albedo.rgb  *= lightMapColor;
     #endif
 
-    #ifdef VERTEX_LIGHTING
-       vec2 light = vertexLightValues.xy;
-       #ifdef COLORRAMP
-           light.x = texture2D(m_ColorRamp, vec2(light.x, 0.0)).r;
-           light.y = texture2D(m_ColorRamp, vec2(light.y, 0.0)).r;
-       #endif
+    gl_FragColor.rgb = vec3(0.0);
+    float ndotv = max( dot( normal, viewDir ),0.0);
+    for( int i = 0;i < NB_LIGHTS; i+=3){
+        vec4 lightColor = g_LightData[i];
+        vec4 lightData1 = g_LightData[i+1];
+        vec4 lightDir;
+        vec3 lightVec;
+        lightComputeDir(wPosition, lightColor.w, lightData1, lightDir, lightVec);
 
-        #ifndef USE_SCATTERING
-            gl_FragColor.rgb =  AmbientSum     * diffuseColor.rgb + 
-                                DiffuseSum.rgb * diffuseColor.rgb  * vec3(light.x) +
-                                SpecularSum    * specularColor.rgb * vec3(light.y);
-        #else
-            vec3 color = AmbientSum     * diffuseColor.rgb + 
-                         DiffuseSum.rgb * diffuseColor.rgb  * vec3(light.x) +
-                         SpecularSum    * specularColor.rgb * vec3(light.y);
-            gl_FragColor.rgb =  calculateGroundColor(vec4(color, 1.0)).rgb;
-        #endif            
-    #else
-       vec4 lightDir = vLightDir;
-       lightDir.xyz = normalize(lightDir.xyz);
-       vec3 viewDir = normalize(vViewDir);
+        float fallOff = 1.0;
+        #if __VERSION__ >= 110
+            // allow use of control flow
+        if(lightColor.w > 1.0){
+        #endif
+            fallOff =  computeSpotFalloff(g_LightData[i+2], lightVec);
+        #if __VERSION__ >= 110
+        }
+        #endif
+        //point light attenuation
+        fallOff *= lightDir.w;
 
-       vec2   light = computeLighting(normal, viewDir, lightDir.xyz) * spotFallOff;
-       #ifdef COLORRAMP
-           diffuseColor.rgb  *= texture2D(m_ColorRamp, vec2(light.x, 0.0)).rgb;
-           specularColor.rgb *= texture2D(m_ColorRamp, vec2(light.y, 0.0)).rgb;
-       #endif
+        lightDir.xyz = normalize(lightDir.xyz);
+        vec3 directDiffuse;
+        vec3 directSpecular;
 
-       // Workaround, since it is not possible to modify varying variables
-       vec4 SpecularSum2 = vec4(SpecularSum, 1.0);
-       #ifdef USE_REFLECTION
-            vec4 refColor = Optics_GetEnvColor(m_EnvMap, refVec.xyz);
+        PBR_ComputeDirectLight(normal, lightDir.xyz, viewDir,
+                            lightColor.rgb,specular, Roughness, ndotv,
+                            directDiffuse,  directSpecular);
 
-            // Interpolate light specularity toward reflection color
-            // Multiply result by specular map
-            specularColor = mix(SpecularSum2 * light.y, refColor, refVec.w) * specularColor;
+        vec3 directLighting = diffuseColor.rgb *directDiffuse + directSpecular * specularColor.rgb;
 
-            SpecularSum2 = vec4(1.0);
-            light.y = 1.0;
-       #endif
+        gl_FragColor.rgb += directLighting * fallOff;
+    }
 
-        #ifndef USE_SCATTERING
-            gl_FragColor.rgb =  AmbientSum     * diffuseColor.rgb + 
-                                DiffuseSum.rgb * diffuseColor.rgb  * vec3(light.x) +
-                                SpecularSum    * specularColor.rgb * vec3(light.y);
-        #else
-            vec3 color = AmbientSum     * diffuseColor.rgb + 
-                         DiffuseSum.rgb * diffuseColor.rgb  * vec3(light.x) +
-                         SpecularSum    * specularColor.rgb * vec3(light.y);
-            gl_FragColor.rgb =  calculateGroundColor(vec4(color, 1.0)).rgb;
-        #endif            
+    #ifdef INDIRECT_LIGHTING
+        vec3 rv = reflect(-viewDir.xyz, normal.xyz);
+        //prallax fix for spherical bounds from https://seblagarde.wordpress.com/2012/09/29/image-based-lighting-approaches-and-parallax-corrected-cubemap/
+        // g_LightProbeData.w is 1/probe radius, g_LightProbeData.xyz is the position of the lightProbe.
+        rv = g_LightProbeData.w * (wPosition - g_LightProbeData.xyz) +rv;
+
+         //horizon fade from http://marmosetco.tumblr.com/post/81245981087
+        float horiz = dot(rv, wNormal.xyz);
+        float horizFadePower= 1.0 - Roughness;
+        horiz = clamp( 1.0 + horizFadePower * horiz, 0.0, 1.0 );
+        horiz *= horiz;
+
+        vec3 indirectDiffuse = vec3(0.0);
+        vec3 indirectSpecular = vec3(0.0);
+        indirectDiffuse = textureCube(g_IrradianceMap, normal.xyz).rgb * diffuseColor.rgb;
+
+        indirectSpecular = ApproximateSpecularIBLPolynomial(g_PrefEnvMap, specularColor.rgb, Roughness, ndotv, rv.xyz);
+        indirectSpecular *= vec3(horiz);
+
+        vec3 indirectLighting =  indirectDiffuse + indirectSpecular;
+
+        gl_FragColor.rgb = gl_FragColor.rgb + indirectLighting * step( 0.0, g_LightProbeData.w);
     #endif
+
+    #if defined(EMISSIVE) || defined (EMISSIVEMAP)
+        #ifdef EMISSIVEMAP
+            vec4 emissive = texture2D(m_EmissiveMap, newTexCoord);
+        #else
+            vec4 emissive = m_Emissive;
+        #endif
+        gl_FragColor += emissive * pow(emissive.a, m_EmissivePower) * m_EmissiveIntensity;
+    #endif
+
     gl_FragColor.a = alpha;
+
 }
