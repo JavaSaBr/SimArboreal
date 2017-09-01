@@ -78,6 +78,7 @@ public class TreeParameters extends Parameters implements Iterable<BranchParamet
     private static final float DEFAULT_V_SCALE = 0.45f;
 
     private static final boolean DEFAULT_GENERATE_LEAVES = false;
+    private static final boolean DEFAULT_USE_WIND = false;
 
     /**
      * The list of branches.
@@ -105,10 +106,13 @@ public class TreeParameters extends Parameters implements Iterable<BranchParamet
     private float flexHeight = DEFAULT_FLEX_HEIGHT;
     private float trunkFlexibility = DEFAULT_TRUNK_FLEXIBILITY;
     private float branchFlexibility = DEFAULT_BRANCH_FLEXIBILITY;
-    private int uRepeat = DEFAULT_U_REPEAT;
     private float vScale = DEFAULT_V_SCALE;
     private float leafScale = DEFAULT_LEAF_SCALE;
+
+    private int uRepeat = DEFAULT_U_REPEAT;
+
     private boolean generateLeaves = DEFAULT_GENERATE_LEAVES;
+    private boolean useWind = DEFAULT_USE_WIND;
 
     private int seed = 0;
 
@@ -217,6 +221,24 @@ public class TreeParameters extends Parameters implements Iterable<BranchParamet
      */
     public boolean getGenerateLeaves() {
         return generateLeaves;
+    }
+
+    /**
+     * Gets the flag of using wind.
+     *
+     * @return true if need to use wind.
+     */
+    public boolean isUseWind() {
+        return useWind;
+    }
+
+    /**
+     * Set the flag of using wind.
+     *
+     * @return true if need to use wind.
+     */
+    public void setUseWind(final boolean useWind) {
+        this.useWind = useWind;
     }
 
     /**
@@ -839,13 +861,13 @@ public class TreeParameters extends Parameters implements Iterable<BranchParamet
         }
         result.put(BRANCHES_KEY, list);
 
-        list = new ArrayList<Map<String, Object>>(roots.length);
+        list = new ArrayList<>(roots.length);
         for (BranchParameters bp : roots) {
             list.add(bp.toMap());
         }
         result.put(ROOTS_KEY, list);
 
-        list = new ArrayList<Map<String, Object>>(lodLevels.length);
+        list = new ArrayList<>(lodLevels.length);
         for (LevelOfDetailParameters lod : lodLevels) {
             list.add(lod.toMap());
         }
@@ -882,6 +904,7 @@ public class TreeParameters extends Parameters implements Iterable<BranchParamet
         out.write(vScale, "vScale", DEFAULT_V_SCALE);
         out.write(leafScale, "leafScale", DEFAULT_LEAF_SCALE);
         out.write(generateLeaves, "generateLeaves", DEFAULT_GENERATE_LEAVES);
+        out.write(useWind, "useWind", DEFAULT_USE_WIND);
     }
 
     @Override
@@ -914,6 +937,7 @@ public class TreeParameters extends Parameters implements Iterable<BranchParamet
         vScale = in.readFloat("vScale", DEFAULT_V_SCALE);
         leafScale = in.readFloat("leafScale", DEFAULT_LEAF_SCALE);
         generateLeaves = in.readBoolean("generateLeaves", DEFAULT_GENERATE_LEAVES);
+        useWind = in.readBoolean("useWind", DEFAULT_USE_WIND);
     }
 
     private class BranchIterator implements Iterator<BranchParameters> {
