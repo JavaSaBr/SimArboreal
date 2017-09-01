@@ -86,6 +86,8 @@ void main() {
 
         gl_Position = g_ProjectionMatrix * vec4(wvPosition, 1.0);
 
+        wPosition = wvPosition.xyz;
+
         vec3 wvNormal = normalize(vec3(corner.x - 0.5, corner.y - 0.5, 0.5));
     #else
 
@@ -104,7 +106,9 @@ void main() {
 
         // Calculate the screen parallel axis vectors
         vec3 cameraOffset = wmPosition.xyz - g_CameraPosition;
+
         vDistance = length(cameraOffset);
+
         vec3 dir = cameraOffset/vDistance; //normalize(wmPosition.xyz - g_CameraPosition);
         vec3 left = normalize(cross(dir, vec3(0.0, 1.0, 0.0)));
         vec3 up = normalize(cross(left, dir));
@@ -121,29 +125,30 @@ void main() {
         vec3 wvPosition = (g_ViewMatrix * wmPosition).xyz;
 
         gl_Position = g_ViewProjectionMatrix * wmPosition;
+        wPosition = wmPosition.xyz;
 
         // Calculate a splayed set of normals based on the corner to simulate
         // curvature.  This allows the billboard to be lit no matter the
         // current direction.
         // Normal is calculated by mixing the real world-normal for the
         // surface with the splayed normal.
-        wNormal = (worldMatrix * vec4(modelSpaceNorm, 0.0)).xyz * 0.1;
-        wNormal += left * (corner.x - 0.5);
-        wNormal += up * (corner.y - 0.5);
-        wNormal += billboardNormal * 0.5;
+        vec3 wmNormal = (worldMatrix * vec4(modelSpaceNorm, 0.0)).xyz * 0.1;
+        wmNormal += left * (corner.x - 0.5);
+        wmNormal += up * (corner.y - 0.5);
+        wmNormal += billboardNormal * 0.5;
 
         // Now convert the world normal to world view space
-        vec3 wvNormal = normalize((g_ViewMatrix * vec4(wNormal, 0.0)).xyz);
+        // vec3 wvNormal = normalize((g_ViewMatrix * vec4(wmNormal, 0.0)).xyz);
+
+        wNormal = wmNormal;
     #endif
 
     #ifdef SEPARATE_TEXCOORD
         texCoord2 = inTexCoord2;
     #endif
 
-    wPosition = wmPosition.xyz;
-
     #if defined(NORMALMAP) || defined(PARALLAXMAP)
-        wTangent = vec4(TransformWorldNormal(modelSpaceTan),inTangent.w);
+        wTangent = vec4(TransformWorldNormal(modelSpaceTan), inTangent.w);
     #endif
 
     Color = m_BaseColor;

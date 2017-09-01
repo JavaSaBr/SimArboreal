@@ -67,35 +67,29 @@ void main() {
     // *** Determine the positions and normals
 
     #ifndef SCREENSPACE
+
         // The default way
-        vec4 wPosition = worldMatrix * modelSpacePos;
-        vec3 wNormal = (worldMatrix * vec4(modelSpaceNorm, 0.0)).xyz;
-        vec3 dir = normalize(wPosition.xyz - g_CameraPosition);
+        vec4 wmPosition = worldMatrix * modelSpacePos;
+        vec3 wmNormal = (worldMatrix * vec4(modelSpaceNorm, 0.0)).xyz;
+        vec3 dir = normalize(wmPosition.xyz - g_CameraPosition);
 
         #ifdef USE_WIND
             float windStrength = 0.75;
-
             // Need to know the model's ground position for noise basis
             // otherwise the tree will warp all over the place and it
             // will look strange as the trunk stretches and shrinks.
             vec4 groundPos = worldMatrix * vec4(0.0, 0.0, 0.0, 1.0);
-
-            wPosition.xyz += calculateWind(groundPos.xyz, wPosition.xyz - groundPos.xyz, windStrength);
+            wmPosition.xyz += calculateWind(groundPos.xyz, wmPosition.xyz - groundPos.xyz, windStrength);
         #endif
 
-        vec3 offset = normalize(cross(dir, wNormal));
-        wPosition.xyz += offset * inSize;
+        vec3 offset = normalize(cross(dir, wmNormal));
+        wmPosition.xyz += offset * inSize;
 
-        #ifdef USE_SCATTERING
-            calculateVertexGroundScattering(wPosition.xyz, g_CameraPosition);
-        #endif
+        vec3 wvPosition = (g_ViewMatrix * wmPosition).xyz;
 
-        vec3 wvPosition = (g_ViewMatrix * wPosition).xyz;
-
-        gl_Position = g_ViewProjectionMatrix * wPosition;
-
-        wNormal = (cross(offset, wNormal) * 0.05) + (offset * inSize);
-        vec3 wvNormal = (g_ViewMatrix * vec4(wNormal, 0.0)).xyz;
+        gl_Position = g_ViewProjectionMatrix * wmPosition;
+        wPosition = wmPosition.xyz;
+        wNormal = (cross(offset, wmNormal) * 0.05) + (offset * inSize);
 
     #else
         // Calculate in viewspace... the billboarding will crawl
@@ -108,16 +102,15 @@ void main() {
         wvPosition += offset * inSize;
 
         gl_Position = g_ProjectionMatrix * vec4(wvPosition, 1.0);
-
+        wPosition = wvPosition;
 
         // Now calculate a splayed normal for this new configuration
         vec3 surfaceNormal = cross(offset, wvNormal);
         //wvNormal = normalize((surfaceNormal * 0.25) + (offset * inSize));
         wvNormal = (surfaceNormal * 0.25) + (offset * inSize);
         //wvNormal = normalize(wvNormal);
+        wNormal = wvNormal;
     #endif
-
-    vec3 viewDir = normalize(-wvPosition);
 
     // *** end billboard changes
 
