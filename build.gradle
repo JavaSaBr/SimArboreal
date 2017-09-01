@@ -36,10 +36,6 @@ repositories {
     maven { url "http://dl.bintray.com/jmonkeyengine/org.jmonkeyengine" }
 }
 
-javadoc {
-    failOnError = false
-}
-
 // Make sure the build file declares what it actually imports
 configurations.compile {
     transitive = false

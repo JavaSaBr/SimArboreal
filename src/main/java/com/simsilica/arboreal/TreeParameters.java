@@ -235,7 +235,7 @@ public class TreeParameters extends Parameters implements Iterable<BranchParamet
     /**
      * Set the flag of using wind.
      *
-     * @return true if need to use wind.
+     * @param useWind true if need to use wind.
      */
     public void setUseWind(final boolean useWind) {
         this.useWind = useWind;
