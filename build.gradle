@@ -12,8 +12,8 @@ apply plugin: 'maven'
 apply plugin: 'idea'
 apply plugin: 'org.junit.platform.gradle.plugin'
 
-version='1.2.0'
-group='com.simsilica'
+version = '1.2.1'
+group = 'com.simsilica'
 
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
@@ -31,7 +31,7 @@ ext.log4jVersion = '2.6.2'
 repositories {
     mavenLocal()
     jcenter()
-    
+
     // Temporary until JME jars are in jcenter()   
     maven { url "http://dl.bintray.com/jmonkeyengine/org.jmonkeyengine" }
 }
@@ -47,7 +47,7 @@ dependencies {
     // https://mvnrepository.com/artifact/org.jetbrains/annotations
     compile group: 'org.jetbrains', name: 'annotations', version: '15.0'
 
-    compile "org.jmonkeyengine:jme3-core:3.1.+" 
+    compile "org.jmonkeyengine:jme3-core:3.1.+"
     //compile "com.jme3:jme3-core:unknown" 
     compile 'org.slf4j:slf4j-api:1.7.13'
 
@@ -66,30 +66,29 @@ dependencies {
     testCompile "org.junit.platform:junit-platform-launcher:$junitPlatformVersion"
 }
 
-
 // Configuration to produce maven-repo style -sources and -javadoc jars
 task sourcesJar(type: Jar) {
     classifier = 'sources'
     from sourceSets.main.allSource
-    exclude '**/.backups' 
+    exclude '**/.backups'
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
     from javadoc.destinationDir
 }
- 
+
 task assetsJar(type: Jar) {
     classifier = 'assets'
     from file('assets')
-    exclude '**/*.psd' 
-    exclude '**/.backups' 
+    exclude '**/*.psd'
+    exclude '**/.backups'
 }
 
 task wrapper(type: Wrapper) {
     gradleVersion = '4.1'
 }
- 
+
 artifacts {
     archives sourcesJar
     archives javadocJar
