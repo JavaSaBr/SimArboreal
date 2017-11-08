@@ -1,5 +1,5 @@
 
-## SimArboreal 1.2.1
+## SimArboreal 1.2.2
 
 ## How to use
 
@@ -16,7 +16,7 @@ allprojects {
 }
 
 dependencies {
-    compile 'com.github.JavaSaBr:SimArboreal:1.2.1'
-    compile 'com.github.JavaSaBr:SimArboreal:1.2.1:assets'
+    compile 'com.github.JavaSaBr:SimArboreal:1.2.2'
+    compile 'com.github.JavaSaBr:SimArboreal:1.2.2:assets'
 }
 ```

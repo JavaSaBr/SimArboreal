@@ -3,7 +3,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0-RC2'
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0'
     }
 }
 
@@ -12,7 +12,7 @@ apply plugin: 'maven'
 apply plugin: 'idea'
 apply plugin: 'org.junit.platform.gradle.plugin'
 
-version = '1.2.1'
+version = '1.2.2'
 group = 'com.simsilica'
 
 sourceCompatibility = 1.7
@@ -24,8 +24,8 @@ compileTestJava {
     options.compilerArgs += '-parameters'
 }
 
-ext.junitPlatformVersion = "1.0.0-M5"
-ext.junitJupiterVersion = "5.0.0-M5"
+ext.junitPlatformVersion = "1.0.0"
+ext.junitJupiterVersion = "5.0.0"
 ext.log4jVersion = '2.6.2'
 
 repositories {
@@ -86,7 +86,7 @@ task assetsJar(type: Jar) {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.1'
+    gradleVersion = '4.3'
 }
 
 artifacts {
