@@ -1,6 +1,8 @@
 
 ## SimArboreal 1.2.2
 
+This library provides API to generate trees for jMonkeyEngine.
+
 ## How to use
 
 #### Gradle
