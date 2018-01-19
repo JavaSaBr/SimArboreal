@@ -136,6 +136,7 @@ MaterialDef PBR Lighting {
             WorldViewProjectionMatrix
             ViewProjectionMatrix
             NormalMatrix
+            WorldNormalMatrix
             WorldViewMatrix
             ViewMatrix
             CameraPosition
